@@ -1,0 +1,43 @@
+# INF569: Project run file
+# GROUP: Amaury Fabre, Leopold Dardel, Ginerva Vittoria
+
+reset;
+# Import the AMPL model
+model project.mod;
+
+# Read the data from the data file
+data project.dat;
+
+# Specify the solver
+option solver cplex;
+
+# INDIVIDUALLY ------------------------------------------------------------------
+# Solve using first objective "cost" function
+objective cost;
+solve;
+display Consum,sink,PVprod,Batt,V2G,g;
+#for {t in T} {
+#	printf "%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",Consum[t],sink[t],PVprod[t],Batt[t],V2G[t],g[t] > ./output.tsv ;
+#}
+printf "\n### Lower bound for 'cost' o.f.:  %.2f\n", cost;
+printf "### corresponding value for 'emission' o.f.: %.2f\n\n", emission;
+
+# Solve using second objective "emission" function
+objective emission;
+solve;
+# display Batt,V2G,g;
+printf "\n### Lower bound for 'emission' o.f.:  %.2f\n", emission;
+printf "### corresponding value for 'cost' o.f.: %.2f\n\n", cost;
+
+
+# COMBINED ----------------------------------------------------------------------
+printf "\n\n############################ Using weights\n\n";
+objective combined;
+for {i in 0..10} {
+	let w1 := i/10;
+	solve;
+	printf "### weights (w1 = %.2f, w2 = %.2f)\n", w1, 1-w1;
+	printf "### corresponding value for 'emission' o.f.: %.2f\n", emission;
+	printf "### corresponding value for 'cost' o.f.: %.2f\n\n", cost;
+	# display w1,emission,cost > ./output2.tsv ;
+}
